@@ -1,8 +1,10 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import type { Task, Project, Recurrence } from '../types';
 import { RecurrenceFrequency } from '../types';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { DayTasksModal } from './DayTasksModal';
 
 interface CalendarViewProps {
   tasks: Task[];
@@ -83,6 +85,10 @@ const calculateNextDueDate = (currentDueDate: Date, recurrence: Recurrence): Dat
 
 export const CalendarView: React.FC<CalendarViewProps> = ({ tasks, projects, openEditModal }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [hoveredDateInfo, setHoveredDateInfo] = useState<{ date: Date; tasks: Task[]; position: { top: number; left: number } } | null>(null);
+  const hoverTimeoutRef = useRef<number | null>(null);
+  const leaveTimeoutRef = useRef<number | null>(null);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -175,6 +181,46 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ tasks, projects, ope
            d.getDate() === today.getDate();
   };
 
+  const handleDayClick = (day: Date) => {
+    setSelectedDate(day);
+  };
+
+  const handleDayMouseEnter = (e: React.MouseEvent, day: Date) => {
+      if (leaveTimeoutRef.current) {
+          clearTimeout(leaveTimeoutRef.current);
+      }
+      if (hoverTimeoutRef.current) {
+          clearTimeout(hoverTimeoutRef.current);
+      }
+      hoverTimeoutRef.current = window.setTimeout(() => {
+          const tasksForDay = tasksByDate.get(day.toDateString());
+          if (tasksForDay && tasksForDay.length > 0) {
+              const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+              setHoveredDateInfo({
+                  date: day,
+                  tasks: tasksForDay,
+                  position: { top: rect.bottom + 5, left: rect.left }
+              });
+          }
+      }, 200);
+  };
+
+  const handleMouseLeave = () => {
+      if (hoverTimeoutRef.current) {
+          clearTimeout(hoverTimeoutRef.current);
+      }
+      leaveTimeoutRef.current = window.setTimeout(() => {
+          setHoveredDateInfo(null);
+      }, 300);
+  };
+
+  const handleTooltipMouseEnter = () => {
+      if (leaveTimeoutRef.current) {
+          clearTimeout(leaveTimeoutRef.current);
+      }
+  };
+
+
   return (
     <div className="h-full flex flex-col bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
       <header className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
@@ -202,30 +248,73 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ tasks, projects, ope
         ))}
       </div>
       <div className="grid grid-cols-7 grid-rows-5 flex-1 overflow-hidden">
-        {daysInMonth.map((day, index) => (
-          <div key={index} className="border-b border-r border-gray-200 dark:border-gray-700 p-2 flex flex-col overflow-y-auto relative last:border-r-0">
-            {day && (
-                <>
-                    <span className={`font-semibold text-sm ${isToday(day) ? 'bg-primary text-white rounded-full w-6 h-6 flex items-center justify-center' : 'text-gray-700 dark:text-gray-300'}`}>
-                        {day.getDate()}
-                    </span>
-                    <div className="mt-2 space-y-1">
-                        {tasksByDate.get(day.toDateString())?.map(task => (
-                            <button 
-                                key={task.id + (task.dueDate ? task.dueDate.getTime() : '')} 
-                                onClick={() => openEditModal(task)} 
-                                className={`w-full text-left text-xs p-1.5 rounded-md flex items-center group ${task.completed ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 line-through' : 'bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-blue-800 dark:text-blue-200'}`}
-                            >
-                                <span className={`w-2 h-2 rounded-full mr-2 ${getProjectColor(task.projectId)}`}></span>
-                                <span className="truncate">{task.title}</span>
-                            </button>
-                        ))}
-                    </div>
-                </>
-            )}
-          </div>
-        ))}
+        {daysInMonth.map((day, index) => {
+            const tasksForDay = day ? tasksByDate.get(day.toDateString()) : [];
+            return (
+                <div 
+                    key={index} 
+                    className="border-b border-r border-gray-200 dark:border-gray-700 p-2 flex flex-col overflow-y-auto relative last:border-r-0 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200 cursor-pointer"
+                    onClick={() => day && handleDayClick(day)}
+                    onMouseEnter={(e) => day && handleDayMouseEnter(e, day)}
+                    onMouseLeave={handleMouseLeave}
+                >
+                    {day && (
+                        <>
+                            <span className={`font-semibold text-sm self-start ${isToday(day) ? 'bg-primary text-white rounded-full w-6 h-6 flex items-center justify-center' : 'text-gray-700 dark:text-gray-300'}`}>
+                                {day.getDate()}
+                            </span>
+                            <div className="mt-2 space-y-1">
+                                {tasksForDay?.slice(0, 3).map(task => (
+                                    <button 
+                                        key={task.id + (task.dueDate ? task.dueDate.getTime() : '')} 
+                                        onClick={(e) => { e.stopPropagation(); openEditModal(task); }} 
+                                        className={`w-full text-left text-xs p-1.5 rounded-md flex items-center group ${task.completed ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 line-through' : 'bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-blue-800 dark:text-blue-200'}`}
+                                    >
+                                        <span className={`w-2 h-2 rounded-full mr-2 flex-shrink-0 ${getProjectColor(task.projectId)}`}></span>
+                                        <span className="truncate">{task.title}</span>
+                                    </button>
+                                ))}
+                                {(tasksForDay?.length || 0) > 3 && (
+                                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 pl-1.5">
+                                        他 {(tasksForDay?.length || 0) - 3} 件
+                                    </div>
+                                )}
+                            </div>
+                        </>
+                    )}
+                </div>
+            )
+        })}
       </div>
+       {hoveredDateInfo && createPortal(
+        <div 
+            style={{ top: `${hoveredDateInfo.position.top}px`, left: `${hoveredDateInfo.position.left}px`, transform: 'translateX(-50%)', marginLeft: '3rem' }} 
+            className="fixed z-50 p-3 bg-white dark:bg-gray-800 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 max-w-xs w-full"
+            onMouseEnter={handleTooltipMouseEnter}
+            onMouseLeave={handleMouseLeave}
+        >
+            <p className="font-semibold text-sm mb-2 text-gray-800 dark:text-gray-200">
+                {hoveredDateInfo.date.toLocaleDateString('ja-JP', { month: 'long', day: 'numeric' })}
+            </p>
+            <ul className="space-y-1.5 max-h-48 overflow-y-auto">
+                {hoveredDateInfo.tasks.map(task => (
+                    <li key={task.id + (task.dueDate ? task.dueDate.getTime() : '')} className="flex items-center text-xs">
+                        <span className={`w-2 h-2 rounded-full mr-2 shrink-0 ${getProjectColor(task.projectId)}`}></span>
+                        <span className={`truncate ${task.completed ? 'line-through text-gray-500' : 'text-gray-700 dark:text-gray-300'}`}>{task.title}</span>
+                    </li>
+                ))}
+            </ul>
+        </div>,
+        document.body
+      )}
+      <DayTasksModal 
+          isOpen={!!selectedDate}
+          onClose={() => setSelectedDate(null)}
+          date={selectedDate}
+          tasks={selectedDate ? tasksByDate.get(selectedDate.toDateString()) || [] : []}
+          projects={projects}
+          openEditModal={openEditModal}
+      />
     </div>
   );
 };
