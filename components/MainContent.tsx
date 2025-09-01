@@ -14,9 +14,11 @@ interface MainContentProps {
   deleteTask: (taskId: string) => void;
   toggleTaskCompletion: (taskId: string) => void;
   openEditModal: (task: Task) => void;
+  onStartFocus: (taskId: string) => void;
+  activeTaskId: string | null;
 }
 
-export const MainContent: React.FC<MainContentProps> = ({ view, tasks, allTasks, addTask, updateTask, deleteTask, toggleTaskCompletion, openEditModal }) => {
+export const MainContent: React.FC<MainContentProps> = ({ view, tasks, allTasks, addTask, updateTask, deleteTask, toggleTaskCompletion, openEditModal, onStartFocus, activeTaskId }) => {
   const [showCompleted, setShowCompleted] = useState(false);
 
   const { scheduledMinutes, uncompletedTasks, executedMinutes, completedTasksCount } = useMemo(() => {
@@ -37,72 +39,72 @@ export const MainContent: React.FC<MainContentProps> = ({ view, tasks, allTasks,
   const completedTasksInView = tasks.filter(t => t.completed);
   
   const uncompletedMinutesInView = useMemo(() => 
-    uncompletedTasksInView.reduce((sum, task) => sum + task.estimatedMinutes, 0)
-  , [uncompletedTasksInView]);
+    uncompletedTasksInView.reduce((sum, task) => sum + task.estimatedMinutes, 0),
+    [uncompletedTasksInView]
+  );
 
   return (
     <div className="max-w-4xl mx-auto">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-200">{view.title}</h2>
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">{view.title}</h1>
         <button className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
-          <SortAsc size={20} className="text-gray-500 dark:text-gray-400" />
+            <SortAsc size={20} className="text-gray-600 dark:text-gray-400" />
         </button>
       </div>
-      
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <SummaryCard label="予定時間" value={`${scheduledMinutes}`} unit="分" color="text-blue-500" />
-        <SummaryCard label="未完了のタスク" value={uncompletedTasks.toString()} color="text-orange-500" />
-        <SummaryCard label="実行済みの時間" value={`${executedMinutes}`} unit="分" color="text-green-500" />
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <SummaryCard label="予定時間" value={scheduledMinutes.toString()} unit="分" color="text-red-500" />
+        <SummaryCard label="未完了のタスク" value={uncompletedTasks.toString()} color="text-red-500" />
+        <SummaryCard label="実行済みの時間" value={executedMinutes.toString()} unit="分" color="text-red-500" />
         <SummaryCard label="完了済のタスク" value={completedTasksCount.toString()} color="text-red-500" />
       </div>
 
-      <AddTaskForm onAddTask={addTask} />
-
-      <div className="mt-6">
-        <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">フォーカス・{uncompletedMinutesInView}分</h3>
-        {uncompletedTasksInView.length > 0 ? (
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-            {uncompletedTasksInView.map(task => (
-              <TaskItem 
-                key={task.id} 
-                task={task} 
-                onToggle={toggleTaskCompletion} 
-                onUpdate={updateTask} 
-                onDelete={deleteTask}
-                openEditModal={openEditModal}
-              />
-            ))}
-          </div>
-        ) : (
-          <p className="text-gray-500 dark:text-gray-400 text-center py-4">タスクはありません</p>
-        )}
+      <div className="mb-6">
+        <AddTaskForm onAddTask={addTask} />
       </div>
 
-      {completedTasksInView.length > 0 && (
-          <div className="mt-8 text-center">
-            <button onClick={() => setShowCompleted(!showCompleted)} className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 font-medium">
-              {showCompleted ? '完了済みのタスクを隠す' : '完了済みのタスクを表示'}▼
-            </button>
-          </div>
-      )}
-
-      {showCompleted && completedTasksInView.length > 0 && (
-        <div className="mt-4">
-          <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">完了済み - {completedTasksInView.length}</h3>
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-            {completedTasksInView.map(task => (
-              <TaskItem 
-                key={task.id} 
-                task={task} 
-                onToggle={toggleTaskCompletion} 
-                onUpdate={updateTask} 
-                onDelete={deleteTask}
-                openEditModal={openEditModal}
-              />
-            ))}
-          </div>
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">フォーカス - {uncompletedTasksInView.length}件・{uncompletedMinutesInView}分</h2>
         </div>
-      )}
+        <div>
+            {uncompletedTasksInView.map(task => (
+                <TaskItem 
+                    key={task.id} 
+                    task={task} 
+                    onToggle={toggleTaskCompletion} 
+                    onUpdate={updateTask}
+                    onDelete={deleteTask}
+                    openEditModal={openEditModal}
+                    onStartFocus={onStartFocus}
+                    isActive={task.id === activeTaskId}
+                />
+            ))}
+        </div>
+        {completedTasksInView.length > 0 && (
+            <div className="p-4">
+                <button onClick={() => setShowCompleted(!showCompleted)} className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-primary">
+                    {showCompleted ? '完了済みのタスクを非表示' : '完了済みのタスクを表示'} ▼
+                </button>
+            </div>
+        )}
+        {showCompleted && (
+             <div>
+                {completedTasksInView.map(task => (
+                    <TaskItem 
+                        key={task.id} 
+                        task={task} 
+                        onToggle={toggleTaskCompletion} 
+                        onUpdate={updateTask}
+                        onDelete={deleteTask}
+                        openEditModal={openEditModal}
+                        onStartFocus={onStartFocus}
+                        isActive={task.id === activeTaskId}
+                    />
+                ))}
+            </div>
+        )}
+      </div>
     </div>
   );
 };

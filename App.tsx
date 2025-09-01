@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { MainContent } from './components/MainContent';
 import { Header } from './components/Header';
@@ -7,7 +7,9 @@ import { TaskEditModal } from './components/TaskEditModal';
 import { ProjectEditModal } from './components/ProjectEditModal';
 import { CalendarView } from './components/CalendarView';
 import { SettingsModal } from './components/SettingsModal';
-import type { Task, Project, View, Recurrence, SidebarViewSettings, Theme } from './types';
+import { PomodoroFocusModal } from './components/PomodoroFocusModal';
+import { ReportsView } from './components/ReportsView';
+import type { Task, Project, View, Recurrence, SidebarViewSettings, Theme, PomodoroMode, PomodoroSession } from './types';
 import { Priority, ViewType, RecurrenceFrequency } from './types';
 import { initialTasks, initialProjects } from './constants';
 
@@ -88,6 +90,8 @@ const App: React.FC = () => {
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [isFocusModalOpen, setIsFocusModalOpen] = useState(false);
+  const [isReportsViewOpen, setIsReportsViewOpen] = useState(false);
 
   const [theme, setTheme] = useState<Theme>(() => {
     try {
@@ -100,6 +104,27 @@ const App: React.FC = () => {
     }
     return 'light';
   });
+
+  const [pomodoroHistory, setPomodoroHistory] = useState<PomodoroSession[]>(() => {
+    try {
+      const savedHistory = localStorage.getItem('pomodoroHistory');
+      if (savedHistory) {
+        // Dates need to be revived from string
+        return JSON.parse(savedHistory).map((s: PomodoroSession) => ({...s, completedAt: new Date(s.completedAt)}));
+      }
+    } catch (error) {
+      console.error("Could not parse pomodoro history from localStorage", error);
+    }
+    return [];
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('pomodoroHistory', JSON.stringify(pomodoroHistory));
+    } catch (error) {
+      console.error("Could not save pomodoro history to localStorage", error);
+    }
+  }, [pomodoroHistory]);
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -145,10 +170,119 @@ const App: React.FC = () => {
       console.error("Could not save sidebar settings to localStorage", error);
     }
   }, [sidebarViewSettings]);
+  
+  // Pomodoro Timer State
+  const [pomodoroSettings] = useState({
+      work: 25,
+      shortBreak: 5,
+      longBreak: 15,
+      longBreakInterval: 4,
+  });
+  const [pomodoroMode, setPomodoroMode] = useState<PomodoroMode>('work');
+  const [timeLeft, setTimeLeft] = useState(pomodoroSettings.work * 60);
+  const [isTimerActive, setIsTimerActive] = useState(false);
+  const [pomodoroSessions, setPomodoroSessions] = useState(0);
+  const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
+  const [currentSessionDuration, setCurrentSessionDuration] = useState(pomodoroSettings.work);
+
+
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const switchMode = useCallback(() => {
+      if(timerRef.current) clearInterval(timerRef.current);
+      setIsTimerActive(false);
+
+      if (pomodoroMode === 'work') {
+          const newSession: PomodoroSession = {
+            id: `pom-session-${Date.now()}`,
+            taskId: activeTaskId,
+            completedAt: new Date(),
+            durationMinutes: currentSessionDuration
+          };
+          setPomodoroHistory(prev => [...prev, newSession]);
+
+          const newSessions = pomodoroSessions + 1;
+          setPomodoroSessions(newSessions);
+          if (newSessions % pomodoroSettings.longBreakInterval === 0) {
+              setPomodoroMode('longBreak');
+              setTimeLeft(pomodoroSettings.longBreak * 60);
+          } else {
+              setPomodoroMode('shortBreak');
+              setTimeLeft(pomodoroSettings.shortBreak * 60);
+          }
+      } else {
+          setPomodoroMode('work');
+          const activeTask = tasks.find(t => t.id === activeTaskId);
+          const workTime = activeTask ? activeTask.estimatedMinutes : pomodoroSettings.work;
+          setTimeLeft(workTime * 60);
+          setCurrentSessionDuration(workTime);
+      }
+      setIsTimerActive(true);
+  }, [pomodoroMode, pomodoroSessions, pomodoroSettings, activeTaskId, tasks, currentSessionDuration]);
+
+  useEffect(() => {
+      if (isTimerActive && timeLeft > 0) {
+          timerRef.current = setInterval(() => {
+              setTimeLeft(prev => prev - 1);
+          }, 1000);
+      } else if (isTimerActive && timeLeft === 0) {
+          switchMode();
+      }
+
+      return () => {
+          if (timerRef.current) {
+              clearInterval(timerRef.current);
+          }
+      };
+  }, [isTimerActive, timeLeft, switchMode]);
+  
+  const toggleTimer = () => setIsTimerActive(!isTimerActive);
+
+  const resetTimer = () => {
+      if(timerRef.current) clearInterval(timerRef.current);
+      setIsTimerActive(false);
+      const activeTask = tasks.find(t => t.id === activeTaskId);
+      let newTime = pomodoroSettings.work * 60;
+      if (pomodoroMode === 'work' && activeTask) {
+        newTime = activeTask.estimatedMinutes * 60;
+      } else {
+        newTime = pomodoroSettings[pomodoroMode] * 60;
+      }
+      setTimeLeft(newTime);
+  };
+  
+  const handleStartFocus = (taskId: string) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    if(timerRef.current) clearInterval(timerRef.current);
+    setTimeLeft(task.estimatedMinutes * 60);
+    setCurrentSessionDuration(task.estimatedMinutes);
+    setPomodoroMode('work');
+    setActiveTaskId(task.id);
+    setIsTimerActive(true);
+    setIsFocusModalOpen(true);
+    setIsReportsViewOpen(false); // Close reports view when starting a session
+  };
+  
+  const stopFocusSession = () => {
+    if(timerRef.current) clearInterval(timerRef.current);
+    setIsTimerActive(false);
+    setActiveTaskId(null);
+    setPomodoroMode('work');
+    setTimeLeft(pomodoroSettings.work * 60);
+    setCurrentSessionDuration(pomodoroSettings.work);
+    setIsFocusModalOpen(false);
+  };
 
   const handleUpdateSidebarSettings = (newSettings: SidebarViewSettings) => {
     setSidebarViewSettings(newSettings);
   };
+  
+  const handleSetCurrentView = (view: View) => {
+    setCurrentView(view);
+    setIsReportsViewOpen(false);
+  }
 
   // Task CRUD
   const addTask = (title: string) => {
@@ -305,7 +439,7 @@ const App: React.FC = () => {
     <div className="flex h-screen bg-gray-50 font-sans text-gray-800 dark:bg-gray-900 dark:text-gray-200">
       <Sidebar 
         currentView={currentView}
-        setCurrentView={setCurrentView}
+        setCurrentView={handleSetCurrentView}
         projects={projects}
         tasks={tasks}
         isCollapsed={isSidebarCollapsed}
@@ -319,9 +453,15 @@ const App: React.FC = () => {
             isSidebarCollapsed={isSidebarCollapsed} 
             toggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)} 
             onOpenSettings={() => setIsSettingsModalOpen(true)}
+            onOpenReports={() => setIsReportsViewOpen(true)}
         />
         <main className="flex-1 overflow-y-auto p-8">
-          {currentView.type === ViewType.CALENDAR ? (
+          {isReportsViewOpen ? (
+            <ReportsView 
+              tasks={tasks}
+              pomodoroHistory={pomodoroHistory}
+            />
+          ) : currentView.type === ViewType.CALENDAR ? (
             <CalendarView 
               tasks={tasks}
               projects={projects}
@@ -337,6 +477,8 @@ const App: React.FC = () => {
               deleteTask={deleteTask}
               toggleTaskCompletion={toggleTaskCompletion}
               openEditModal={openEditModal}
+              onStartFocus={handleStartFocus}
+              activeTaskId={activeTaskId}
             />
           )}
         </main>
@@ -362,6 +504,16 @@ const App: React.FC = () => {
         onUpdateSettings={handleUpdateSidebarSettings}
         theme={theme}
         onUpdateTheme={setTheme}
+      />
+      <PomodoroFocusModal
+        isOpen={isFocusModalOpen}
+        task={tasks.find(t => t.id === activeTaskId) || null}
+        timeLeft={timeLeft}
+        mode={pomodoroMode}
+        isActive={isTimerActive}
+        toggleTimer={toggleTimer}
+        resetTimer={resetTimer}
+        stopSession={stopFocusSession}
       />
     </div>
   );

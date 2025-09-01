@@ -8,9 +8,11 @@ interface TaskItemProps {
   onUpdate: (task: Task) => void;
   onDelete: (id: string) => void;
   openEditModal: (task: Task) => void;
+  onStartFocus: (id: string) => void;
+  isActive: boolean;
 }
 
-export const TaskItem: React.FC<TaskItemProps> = ({ task, onToggle, onUpdate, onDelete, openEditModal }) => {
+export const TaskItem: React.FC<TaskItemProps> = ({ task, onToggle, onUpdate, onDelete, openEditModal, onStartFocus, isActive }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(task.title);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -43,7 +45,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, onToggle, onUpdate, on
   }
 
   return (
-    <div className={`flex items-center p-3 border-b border-gray-100 dark:border-gray-700 last:border-b-0 group ${task.completed ? 'opacity-50' : ''}`}>
+    <div className={`flex items-center p-3 border-b border-gray-100 dark:border-gray-700 last:border-b-0 group transition-colors ${task.completed ? 'opacity-50' : ''} ${isActive ? 'bg-red-50 dark:bg-red-900/20' : ''}`}>
       <button onClick={() => onToggle(task.id)} className="mr-3">
         <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${task.completed ? 'bg-primary border-primary' : 'border-gray-300 dark:border-gray-600 group-hover:border-primary'}`}>
             {task.completed && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>}
@@ -72,7 +74,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, onToggle, onUpdate, on
           <span key={tag} className="text-xs text-blue-600 dark:text-blue-400">#{tag}</span>
         ))}
         {task.dueDate && <span className="text-xs">{new Date(task.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>}
-        <button className="p-1 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-900/20 opacity-0 group-hover:opacity-100 transition-opacity">
+        <button onClick={() => onStartFocus(task.id)} className="p-1 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-900/20 opacity-0 group-hover:opacity-100 transition-opacity">
             <Play size={16} />
         </button>
         <div className="relative" ref={menuRef}>

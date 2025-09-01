@@ -39,6 +39,13 @@ export interface Project {
   color: string;
 }
 
+export interface PomodoroSession {
+  id: string;
+  taskId: string | null;
+  completedAt: Date;
+  durationMinutes: number;
+}
+
 export enum ViewType {
   TODAY,
   OVERDUE,
