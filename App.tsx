@@ -7,7 +7,7 @@ import { TaskEditModal } from './components/TaskEditModal';
 import { ProjectEditModal } from './components/ProjectEditModal';
 import { CalendarView } from './components/CalendarView';
 import { SettingsModal } from './components/SettingsModal';
-import type { Task, Project, View, Recurrence, SidebarViewSettings } from './types';
+import type { Task, Project, View, Recurrence, SidebarViewSettings, Theme } from './types';
 import { Priority, ViewType, RecurrenceFrequency } from './types';
 import { initialTasks, initialProjects } from './constants';
 
@@ -88,6 +88,32 @@ const App: React.FC = () => {
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+
+  const [theme, setTheme] = useState<Theme>(() => {
+    try {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'light' || savedTheme === 'dark') {
+        return savedTheme;
+      }
+    } catch (error) {
+       console.error("Could not read theme from localStorage", error);
+    }
+    return 'light';
+  });
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    if (theme === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+    try {
+      localStorage.setItem('theme', theme);
+    } catch (error) {
+      console.error("Could not save theme to localStorage", error);
+    }
+  }, [theme]);
 
   const [sidebarViewSettings, setSidebarViewSettings] = useState<SidebarViewSettings>(() => {
     try {
@@ -276,7 +302,7 @@ const App: React.FC = () => {
   const filteredTasks = useMemo(() => getFilteredTasks(), [getFilteredTasks]);
 
   return (
-    <div className="flex h-screen bg-gray-50 font-sans text-gray-800">
+    <div className="flex h-screen bg-gray-50 font-sans text-gray-800 dark:bg-gray-900 dark:text-gray-200">
       <Sidebar 
         currentView={currentView}
         setCurrentView={setCurrentView}
@@ -334,6 +360,8 @@ const App: React.FC = () => {
         onClose={() => setIsSettingsModalOpen(false)}
         settings={sidebarViewSettings}
         onUpdateSettings={handleUpdateSidebarSettings}
+        theme={theme}
+        onUpdateTheme={setTheme}
       />
     </div>
   );

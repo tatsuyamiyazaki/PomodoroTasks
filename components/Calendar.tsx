@@ -167,19 +167,19 @@ export const Calendar: React.FC<CalendarProps> = ({ selectedDate, onSelectDate, 
   const isToday = (d: Date) => isSameDay(d, new Date());
 
   return (
-    <div className="bg-white rounded-lg shadow-lg border p-4 w-72">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border dark:border-gray-700 p-4 w-72">
       <div className="flex justify-between items-center mb-4">
-        <button onClick={handlePrevMonth} className="p-1 rounded-full hover:bg-gray-100" aria-label="前の月">
+        <button onClick={handlePrevMonth} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="前の月">
           <ChevronLeft size={20} />
         </button>
-        <div className="font-semibold text-gray-800">
+        <div className="font-semibold text-gray-800 dark:text-gray-200">
           {year}年 {month + 1}月
         </div>
-        <button onClick={handleNextMonth} className="p-1 rounded-full hover:bg-gray-100" aria-label="次の月">
+        <button onClick={handleNextMonth} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="次の月">
           <ChevronRight size={20} />
         </button>
       </div>
-      <div className="grid grid-cols-7 text-center text-xs text-gray-500 mb-2">
+      <div className="grid grid-cols-7 text-center text-xs text-gray-500 dark:text-gray-400 mb-2">
         {daysOfWeek.map(day => (
           <div key={day} className="font-medium">{day}</div>
         ))}
@@ -191,8 +191,8 @@ export const Calendar: React.FC<CalendarProps> = ({ selectedDate, onSelectDate, 
               key={index}
               onClick={() => handleDateClick(day)}
               className={`relative w-9 h-9 flex items-center justify-center rounded-full transition-colors font-medium
-                ${isToday(day) && !isSameDay(day, selectedDate) ? 'text-primary' : 'text-gray-700'}
-                ${isSameDay(day, selectedDate) ? 'bg-primary text-white hover:bg-primary/90' : 'hover:bg-gray-100'}
+                ${isToday(day) && !isSameDay(day, selectedDate) ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}
+                ${isSameDay(day, selectedDate) ? 'bg-primary text-white hover:bg-primary/90' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}
               `}
             >
               <span>{day.getDate()}</span>

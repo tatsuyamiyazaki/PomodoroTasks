@@ -43,9 +43,9 @@ export const MainContent: React.FC<MainContentProps> = ({ view, tasks, allTasks,
   return (
     <div className="max-w-4xl mx-auto">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-bold text-gray-800">{view.title}</h2>
-        <button className="p-2 rounded-full hover:bg-gray-100">
-          <SortAsc size={20} className="text-gray-500" />
+        <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-200">{view.title}</h2>
+        <button className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
+          <SortAsc size={20} className="text-gray-500 dark:text-gray-400" />
         </button>
       </div>
       
@@ -59,9 +59,9 @@ export const MainContent: React.FC<MainContentProps> = ({ view, tasks, allTasks,
       <AddTaskForm onAddTask={addTask} />
 
       <div className="mt-6">
-        <h3 className="text-sm font-semibold text-gray-500 mb-2">タスク・{uncompletedMinutesInView}分</h3>
+        <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">フォーカス・{uncompletedMinutesInView}分</h3>
         {uncompletedTasksInView.length > 0 ? (
-          <div className="bg-white rounded-lg border border-gray-200">
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
             {uncompletedTasksInView.map(task => (
               <TaskItem 
                 key={task.id} 
@@ -74,13 +74,13 @@ export const MainContent: React.FC<MainContentProps> = ({ view, tasks, allTasks,
             ))}
           </div>
         ) : (
-          <p className="text-gray-500 text-center py-4">タスクはありません</p>
+          <p className="text-gray-500 dark:text-gray-400 text-center py-4">タスクはありません</p>
         )}
       </div>
 
       {completedTasksInView.length > 0 && (
           <div className="mt-8 text-center">
-            <button onClick={() => setShowCompleted(!showCompleted)} className="text-sm text-gray-600 hover:text-gray-900 font-medium">
+            <button onClick={() => setShowCompleted(!showCompleted)} className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 font-medium">
               {showCompleted ? '完了済みのタスクを隠す' : '完了済みのタスクを表示'}▼
             </button>
           </div>
@@ -88,8 +88,8 @@ export const MainContent: React.FC<MainContentProps> = ({ view, tasks, allTasks,
 
       {showCompleted && completedTasksInView.length > 0 && (
         <div className="mt-4">
-          <h3 className="text-sm font-semibold text-gray-500 mb-2">完了済み - {completedTasksInView.length}</h3>
-          <div className="bg-white rounded-lg border border-gray-200">
+          <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">完了済み - {completedTasksInView.length}</h3>
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
             {completedTasksInView.map(task => (
               <TaskItem 
                 key={task.id} 

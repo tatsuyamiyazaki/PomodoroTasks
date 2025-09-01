@@ -42,30 +42,30 @@ export const ProjectEditModal: React.FC<ProjectEditModalProps> = ({ isOpen, proj
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={onClose} aria-modal="true" role="dialog">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-gray-800">{title}</h2>
-          <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100" aria-label="閉じる">
-            <X size={20} className="text-gray-500" />
+          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">{title}</h2>
+          <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="閉じる">
+            <X size={20} className="text-gray-500 dark:text-gray-400" />
           </button>
         </div>
 
         <div className="space-y-4">
           <div>
-            <label htmlFor="projectName" className="block text-sm font-medium text-gray-700 mb-1">プロジェクト名</label>
+            <label htmlFor="projectName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">プロジェクト名</label>
             <input
               type="text"
               id="projectName"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">カラー</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">カラー</label>
             <div className="flex flex-wrap gap-2">
                 {availableColors.map(c => (
-                    <button key={c} onClick={() => setColor(c)} className={`w-8 h-8 rounded-full ${c} transition-transform ${color === c ? 'ring-2 ring-primary ring-offset-2' : ''}`}></button>
+                    <button key={c} onClick={() => setColor(c)} className={`w-8 h-8 rounded-full ${c} transition-transform ${color === c ? 'ring-2 ring-primary ring-offset-2 ring-offset-white dark:ring-offset-gray-800' : ''}`}></button>
                 ))}
             </div>
           </div>
@@ -75,7 +75,7 @@ export const ProjectEditModal: React.FC<ProjectEditModalProps> = ({ isOpen, proj
           <button
             onClick={onClose}
             type="button"
-            className="px-4 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
+            className="px-4 py-2 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-md text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
           >
             キャンセル
           </button>

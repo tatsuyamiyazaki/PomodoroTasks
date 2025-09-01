@@ -71,17 +71,17 @@ export const PomodoroTimer: React.FC = () => {
     };
 
     return (
-        <div className="flex items-center bg-red-100 text-red-700 rounded-full px-4 py-1.5 font-semibold">
+        <div className="flex items-center bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 rounded-full px-4 py-1.5 font-semibold">
             <span>{formatTime(timeLeft)}</span>
-            <span className="mx-2 text-red-300">|</span>
+            <span className="mx-2 text-red-300 dark:text-red-500">|</span>
             <span>{modeTextMap[mode]}</span>
-            <button onClick={toggleTimer} className="ml-2 p-1 rounded-full hover:bg-red-200">
+            <button onClick={toggleTimer} className="ml-2 p-1 rounded-full hover:bg-red-200 dark:hover:bg-red-800/60">
                 {isActive ? <Pause size={16} /> : <Play size={16} />}
             </button>
-            <button onClick={resetTimer} className="p-1 rounded-full hover:bg-red-200">
+            <button onClick={resetTimer} className="p-1 rounded-full hover:bg-red-200 dark:hover:bg-red-800/60">
                 <RotateCcw size={16} />
             </button>
-             <button className="p-1 rounded-full hover:bg-red-200">
+             <button className="p-1 rounded-full hover:bg-red-200 dark:hover:bg-red-800/60">
                 <ChevronDown size={16} />
             </button>
         </div>

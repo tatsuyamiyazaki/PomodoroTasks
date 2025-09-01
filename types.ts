@@ -67,3 +67,5 @@ export type View =
 export type PomodoroMode = 'work' | 'shortBreak' | 'longBreak';
 
 export type SidebarViewSettings = Partial<Record<ViewType, boolean>>;
+
+export type Theme = 'light' | 'dark';

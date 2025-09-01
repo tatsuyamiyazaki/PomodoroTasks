@@ -49,7 +49,7 @@ const SidebarItem: React.FC<{
 }> = ({ icon, label, count, isActive, onClick, children }) => (
   <li
     className={`flex items-center justify-between px-4 py-2 text-sm rounded-md cursor-pointer transition-colors group ${
-      isActive ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-600 hover:bg-gray-100'
+      isActive ? 'bg-gray-100 dark:bg-gray-700 font-semibold text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
     }`}
     onClick={onClick}
   >
@@ -58,7 +58,7 @@ const SidebarItem: React.FC<{
       <span className="ml-3 truncate">{label}</span>
     </div>
     <div className="flex items-center">
-        {count > 0 && <span className="text-xs text-gray-500 font-medium mr-2">{count}</span>}
+        {count > 0 && <span className="text-xs text-gray-500 dark:text-gray-400 font-medium mr-2">{count}</span>}
         {children}
     </div>
   </li>
@@ -87,7 +87,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, p
     // Fix: Use the NonProjectViewItem type for secondaryViews array to prevent type widening.
     const secondaryViews: NonProjectViewItem[] = [
         { type: ViewType.COMPLETED, title: '完了済み', icon: <CheckCircle size={20} className="text-gray-400" /> },
-        { type: ViewType.ALL, title: 'タスク', icon: <List size={20} className="text-gray-400" />, count: getTaskCount(tasks, ViewType.ALL) },
+        { type: ViewType.ALL, title: 'フォーカス', icon: <List size={20} className="text-gray-400" />, count: getTaskCount(tasks, ViewType.ALL) },
     ];
     
     const checkActive = (view: View) => {
@@ -102,12 +102,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, p
     const visibleSecondaryViews = secondaryViews.filter(view => viewSettings[view.type] !== false);
 
   return (
-    <aside className={`fixed top-0 left-0 h-full bg-white border-r border-gray-200 flex flex-col transition-transform duration-300 ${isCollapsed ? '-translate-x-full' : 'translate-x-0'}`} style={{width: '260px'}}>
-      <div className="flex items-center p-4 border-b border-gray-200">
+    <aside className={`fixed top-0 left-0 h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col transition-transform duration-300 ${isCollapsed ? '-translate-x-full' : 'translate-x-0'}`} style={{width: '260px'}}>
+      <div className="flex items-center p-4 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center">
-          <div className="w-8 h-8 rounded-full bg-gray-300"></div>
-          <span className="ml-3 font-semibold text-gray-800">tatsuya.miyazaki</span>
-          <ChevronDown size={16} className="ml-1 text-gray-500" />
+          <div className="w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-600"></div>
+          <span className="ml-3 font-semibold text-gray-800 dark:text-gray-200">tatsuya.miyazaki</span>
+          <ChevronDown size={16} className="ml-1 text-gray-500 dark:text-gray-400" />
         </div>
       </div>
       <nav className="flex-1 p-4 overflow-y-auto">
@@ -123,7 +123,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, p
                 />
             ))}
         </ul>
-        <hr className="my-4" />
+        <hr className="my-4 border-gray-200 dark:border-gray-700" />
         <ul>
             {visibleSecondaryViews.map((view) => (
                  <SidebarItem
@@ -136,10 +136,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, p
                 />
             ))}
         </ul>
-        <hr className="my-4" />
+        <hr className="my-4 border-gray-200 dark:border-gray-700" />
         <div className="flex justify-between items-center px-4">
-          <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">プロジェクト</h3>
-          <button onClick={onAddProject} className="p-1 text-gray-400 hover:text-gray-600">
+          <h3 className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">プロジェクト</h3>
+          <button onClick={onAddProject} className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300">
             <PlusCircle size={16} />
           </button>
         </div>
@@ -154,8 +154,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, p
               onClick={() => setCurrentView({ type: ViewType.PROJECT, id: project.id, title: project.name })}
             >
                 <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={(e) => { e.stopPropagation(); onEditProject(project); }} className="p-1 hover:text-gray-800"><Edit size={14} /></button>
-                    <button onClick={(e) => { e.stopPropagation(); onDeleteProject(project.id); }} className="p-1 hover:text-red-600"><Trash2 size={14} /></button>
+                    <button onClick={(e) => { e.stopPropagation(); onEditProject(project); }} className="p-1 hover:text-gray-800 dark:hover:text-gray-200"><Edit size={14} /></button>
+                    <button onClick={(e) => { e.stopPropagation(); onDeleteProject(project.id); }} className="p-1 hover:text-red-600 dark:hover:text-red-500"><Trash2 size={14} /></button>
                 </div>
             </SidebarItem>
           ))}
