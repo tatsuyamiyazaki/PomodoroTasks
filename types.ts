@@ -19,6 +19,11 @@ export interface Recurrence {
   daysOfMonth?: number[]; // For monthly recurrence, e.g., [1, 15]
 }
 
+export interface Reminder {
+  value: number;
+  unit: 'minutes' | 'hours' | 'days';
+}
+
 export interface Task {
   id: string;
   title: string;
@@ -31,6 +36,7 @@ export interface Task {
   completedAt: Date | null;
   createdAt: Date;
   recurrence?: Recurrence;
+  reminder?: Reminder;
 }
 
 export interface Project {

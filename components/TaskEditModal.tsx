@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import type { Task, Project, Recurrence } from '../types';
+import type { Task, Project, Recurrence, Reminder } from '../types';
 import { Priority, RecurrenceFrequency } from '../types';
-import { X, Calendar as CalendarIcon } from 'lucide-react';
+import { X, Calendar as CalendarIcon, Trash2 } from 'lucide-react';
 import { Calendar } from './Calendar';
 
 interface TaskEditModalProps {
@@ -32,6 +32,7 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ isOpen, task, proj
   const [estimatedMinutes, setEstimatedMinutes] = useState(0);
   const [projectId, setProjectId] = useState<string | null>(null);
   const [recurrence, setRecurrence] = useState<Recurrence | undefined>(undefined);
+  const [reminder, setReminder] = useState<Reminder | undefined>(undefined);
 
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const calendarRef = useRef<HTMLDivElement>(null);
@@ -45,6 +46,7 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ isOpen, task, proj
       setEstimatedMinutes(task.estimatedMinutes);
       setProjectId(task.projectId);
       setRecurrence(task.recurrence);
+      setReminder(task.reminder);
     }
   }, [task]);
 
@@ -74,6 +76,7 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ isOpen, task, proj
       estimatedMinutes: Number(estimatedMinutes) || 0,
       projectId,
       recurrence,
+      reminder,
     };
     onSave(updatedTask);
   };
@@ -237,6 +240,40 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ isOpen, task, proj
                     <option key={p.id} value={p.id}>{p.name}</option>
                 ))}
               </select>
+            </div>
+            <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">リマインダー</label>
+                {!reminder ? (
+                    <button
+                        type="button"
+                        onClick={() => setReminder({ value: 10, unit: 'minutes' })}
+                        className="w-full px-3 py-2 text-sm text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-700 border border-dashed border-gray-300 dark:border-gray-600 rounded-md hover:border-primary hover:text-primary"
+                    >
+                        リマインダーを追加
+                    </button>
+                ) : (
+                    <div className="flex items-center space-x-2">
+                        <input
+                            type="number"
+                            min="1"
+                            value={reminder.value}
+                            onChange={(e) => setReminder({ ...reminder, value: parseInt(e.target.value, 10) || 1 })}
+                            className="w-20 px-2 py-1.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                        />
+                        <select
+                            value={reminder.unit}
+                            onChange={(e) => setReminder({ ...reminder, unit: e.target.value as 'minutes' | 'hours' | 'days' })}
+                            className="flex-1 px-2 py-1.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                        >
+                            <option value="minutes">分前</option>
+                            <option value="hours">時間前</option>
+                            <option value="days">日前</option>
+                        </select>
+                        <button type="button" onClick={() => setReminder(undefined)} className="p-2 text-gray-500 hover:text-danger rounded-full" aria-label="リマインダーを削除">
+                            <Trash2 size={16} />
+                        </button>
+                    </div>
+                )}
             </div>
             <div>
               <label htmlFor="recurrence" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">繰り返し</label>

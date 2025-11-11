@@ -11,7 +11,6 @@ import { PomodoroFocusModal } from './components/PomodoroFocusModal';
 import { ReportsView } from './components/ReportsView';
 import type { Task, Project, View, Recurrence, SidebarViewSettings, Theme, PomodoroMode, PomodoroSession } from './types';
 import { Priority, ViewType, RecurrenceFrequency } from './types';
-import { initialTasks, initialProjects } from './constants';
 
 const calculateNextDueDate = (currentDueDate: Date, recurrence: Recurrence): Date => {
   const nextDate = new Date(currentDueDate);
@@ -81,8 +80,35 @@ const calculateNextDueDate = (currentDueDate: Date, recurrence: Recurrence): Dat
 
 
 const App: React.FC = () => {
-  const [tasks, setTasks] = useState<Task[]>(initialTasks);
-  const [projects, setProjects] = useState<Project[]>(initialProjects);
+  const [tasks, setTasks] = useState<Task[]>(() => {
+    try {
+      const savedTasks = localStorage.getItem('tasks');
+      if (savedTasks) {
+        return JSON.parse(savedTasks).map((task: Task) => ({
+          ...task,
+          dueDate: task.dueDate ? new Date(task.dueDate) : null,
+          completedAt: task.completedAt ? new Date(task.completedAt) : null,
+          createdAt: task.createdAt ? new Date(task.createdAt) : new Date(),
+        }));
+      }
+    } catch (error) {
+      console.error("Could not load tasks from localStorage", error);
+    }
+    return [];
+  });
+  
+  const [projects, setProjects] = useState<Project[]>(() => {
+    try {
+      const savedProjects = localStorage.getItem('projects');
+      if (savedProjects) {
+        return JSON.parse(savedProjects);
+      }
+    } catch (error) {
+      console.error("Could not load projects from localStorage", error);
+    }
+    return [];
+  });
+
   const [currentView, setCurrentView] = useState<View>({ type: ViewType.TODAY, title: '今日' });
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   
@@ -92,6 +118,23 @@ const App: React.FC = () => {
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isFocusModalOpen, setIsFocusModalOpen] = useState(false);
   const [isReportsViewOpen, setIsReportsViewOpen] = useState(false);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+    } catch (error) {
+      console.error("Could not save tasks to localStorage", error);
+    }
+  }, [tasks]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('projects', JSON.stringify(projects));
+    } catch (error) {
+      console.error("Could not save projects to localStorage", error);
+    }
+  }, [projects]);
+
 
   const [theme, setTheme] = useState<Theme>(() => {
     try {

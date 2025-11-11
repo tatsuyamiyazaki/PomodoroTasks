@@ -65,7 +65,7 @@ export const MainContent: React.FC<MainContentProps> = ({ view, tasks, allTasks,
 
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
         <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">フォーカス - {uncompletedTasksInView.length}件・{uncompletedMinutesInView}分</h2>
+            <h2 className="text-lg font-semibold text-gray-600 dark:text-gray-400">フォーカス - {uncompletedTasksInView.length}件・{uncompletedMinutesInView}分</h2>
         </div>
         <div>
             {uncompletedTasksInView.map(task => (

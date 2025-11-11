@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { Task } from '../types';
-import { Play, MoreHorizontal, Trash2, Edit, Repeat } from 'lucide-react';
+import { Play, MoreHorizontal, Trash2, Edit, Repeat, Bell } from 'lucide-react';
 
 interface TaskItemProps {
   task: Task;
@@ -69,16 +69,21 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, onToggle, onUpdate, on
       )}
       
       <div className="flex items-center ml-auto pl-4 space-x-2 text-gray-500 dark:text-gray-400">
-        {task.recurrence && <Repeat size={14} className="text-gray-400" />}
+        {/* FIX: Wrap lucide-react icon in a span to apply the title attribute for tooltip, as the icon component does not accept the 'title' prop directly. */}
+        {task.reminder && <span title={`リマインダー設定済み`}><Bell size={14} className="text-gray-400" /></span>}
+        {task.recurrence && <span title="繰り返しタスク"><Repeat size={14} className="text-gray-400" /></span>}
         {task.tags.map(tag => (
           <span key={tag} className="text-xs text-blue-600 dark:text-blue-400">#{tag}</span>
         ))}
         {task.dueDate && <span className="text-xs">{new Date(task.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>}
-        <button onClick={() => onStartFocus(task.id)} className="p-1 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-900/20 opacity-0 group-hover:opacity-100 transition-opacity">
+        <button onClick={() => onStartFocus(task.id)} className="p-1 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-900/20 opacity-0 group-hover:opacity-100 transition-opacity" aria-label="フォーカスを開始">
             <Play size={16} />
         </button>
+        <button onClick={() => openEditModal(task)} className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 opacity-0 group-hover:opacity-100 transition-opacity" aria-label="タスクを編集">
+            <Edit size={16} />
+        </button>
         <div className="relative" ref={menuRef}>
-            <button onClick={() => setMenuOpen(!menuOpen)} className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button onClick={() => setMenuOpen(!menuOpen)} className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 opacity-0 group-hover:opacity-100 transition-opacity" aria-label="その他のオプション">
                 <MoreHorizontal size={16} />
             </button>
             {menuOpen && (

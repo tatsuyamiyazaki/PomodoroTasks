@@ -140,6 +140,10 @@ export const initialTasks: Task[] = [
     recurrence: {
         frequency: RecurrenceFrequency.WEEKLY,
         daysOfWeek: [1, 3, 5] // Monday, Wednesday, Friday
+    },
+    reminder: {
+        value: 15,
+        unit: 'minutes',
     }
   },
 ];
